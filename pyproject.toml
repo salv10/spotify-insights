@@ -1,0 +1,17 @@
+[project]
+name = "spotify-insights"
+version = "0.1.0"
+description = "A personal Spotify analytics dashboard built with Python and FastAPI."
+readme = "README.md"
+requires-python = ">=3.13"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
