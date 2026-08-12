@@ -4,6 +4,10 @@ version = "0.1.0"
 description = "A personal Spotify analytics dashboard built with Python and FastAPI."
 readme = "README.md"
 requires-python = ">=3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+]
 
 [project.optional-dependencies]
 dev = [
