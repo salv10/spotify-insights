@@ -1,11 +1,15 @@
 import secrets
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
 import httpx
 from fastapi import APIRouter, Cookie, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
+from sqlalchemy import select
 
 from app.core.config import settings
+from app.db.session import SessionLocal
+from app.models.spotify_account import SpotifyAccount
 
 router = APIRouter(
     prefix="/auth",
@@ -18,7 +22,6 @@ SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
 SCOPES = [
     "user-top-read",
 ]
-
 
 
 @router.get("/login")
@@ -45,6 +48,7 @@ async def login():
     )
 
     return response
+
 
 @router.get("/callback")
 async def callback(
@@ -94,6 +98,32 @@ async def callback(
         )
 
     token_response = response.json()
+
+    access_token_expires_at = datetime.now(timezone.utc)
+    +timedelta(seconds=token_response["expires_in"])
+
+    with SessionLocal() as db:
+        statement = select(SpotifyAccount).limit(1)
+        account = db.scalar(statement)
+        refresh_token = token_response.get("refresh_token")
+        if account is None:
+            if not refresh_token:
+                raise HTTPException(
+                    status_code=502,
+                    detail="Refresh token not provided.",
+                )
+            account = SpotifyAccount(
+                access_token=token_response["access_token"],
+                refresh_token=refresh_token,
+                access_token_expires_at=access_token_expires_at,
+            )
+            db.add(account)
+        else:
+            account.access_token = token_response["access_token"]
+            if refresh_token is not None:
+                account.refresh_token = refresh_token
+            account.access_token_expires_at = access_token_expires_at
+        db.commit()
 
     result = JSONResponse(
         content={

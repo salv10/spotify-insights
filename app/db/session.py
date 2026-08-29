@@ -11,6 +11,7 @@ SessionLocal = sessionmaker(
     autocommit=False,
 )
 
+
 def get_db():
     db = SessionLocal()
 
