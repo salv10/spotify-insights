@@ -1,10 +1,8 @@
 import httpx
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import select
 
-from app.db.session import SessionLocal
-from app.models.spotify_account import SpotifyAccount
 from app.services.spotify_service import SpotifyService
+from app.services.spotify_token_service import get_valid_access_token
 
 router = APIRouter(
     prefix="/spotify",
@@ -16,17 +14,11 @@ spotify_service = SpotifyService()
 
 @router.get("/me")
 async def get_current_user_profile():
-    with SessionLocal() as db:
-        account = db.scalar(select(SpotifyAccount).limit(1))
 
-    if account is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Spotify account not authenticated.",
-        )
+    access_token = await get_valid_access_token()
 
     try:
-        profile = await spotify_service.get_current_user_profile(account.access_token)
+        profile = await spotify_service.get_current_user_profile(access_token)
 
     except httpx.HTTPError as exc:
         raise HTTPException(
