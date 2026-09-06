@@ -35,3 +35,20 @@ class SpotifyService:
         response.raise_for_status()
 
         return response.json()
+
+    async def get_top_tracks(
+        self, access_token: str, limit: int = 20, time_range: str = "medium_term"
+    ) -> dict:
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+
+        async with httpx.AsyncClient(base_url=SPOTIFY_API_BASE_URL) as client:
+            response = await client.get(
+                "/me/top/tracks",
+                headers=headers,
+                params={"limit": limit, "time_range": time_range},
+            )
+        response.raise_for_status()
+
+        return response.json()

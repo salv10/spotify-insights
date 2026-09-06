@@ -28,7 +28,7 @@ async def get_current_user_profile():
     return profile
 
 
-@router.get("/me/top/artists")
+@router.get("/top-artists")
 async def get_current_user_top_artists(limit: int = 20, time_range: str = "medium_term"):
     access_token = await get_valid_access_token()
 
@@ -42,3 +42,19 @@ async def get_current_user_top_artists(limit: int = 20, time_range: str = "mediu
         ) from exc
 
     return top_artists
+
+
+@router.get("/top-tracks")
+async def get_current_user_top_tracks(limit: int = 20, time_range: str = "medium_term"):
+    access_token = await get_valid_access_token()
+
+    try:
+        top_tracks = await spotify_service.get_top_tracks(access_token, limit, time_range)
+
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="Failed to retrieve Spotify top tracks.",
+        ) from exc
+
+    return top_tracks
