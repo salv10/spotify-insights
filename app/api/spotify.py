@@ -1,7 +1,12 @@
-import httpx
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
 
+import httpx
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
 from app.services.spotify_service import SpotifyService
+from app.services.spotify_snapshot_service import save_artist_snapshot
 from app.services.spotify_token_service import get_valid_access_token
 
 router = APIRouter(
@@ -58,3 +63,22 @@ async def get_current_user_top_tracks(limit: int = 20, time_range: str = "medium
         ) from exc
 
     return top_tracks
+
+
+@router.post("/save-top-artists")
+@router.post("/save-top-artists")
+async def save_top_artists_snapshot(
+    db: Annotated[Session, Depends(get_db)],
+    time_range: str = "medium_term",
+):
+    access_token = await get_valid_access_token()
+    top_artists_data = await spotify_service.get_top_artists(
+        access_token, limit=20, time_range=time_range
+    )
+
+    save_artist_snapshot(db, time_range, top_artists_data)
+
+    return {
+        "message": "Top artists snapshot saved successfully.",
+        "time_range": time_range,
+    }
