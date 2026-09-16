@@ -10,6 +10,7 @@ from app.models.spotify_account import Base
 
 if TYPE_CHECKING:
     from app.models.spotify_snapshot_artist import SpotifySnapshotArtist
+    from app.models.spotify_snapshot_track import SpotifySnapshotTrack
 
 
 class SpotifySnapshot(Base):
@@ -37,3 +38,9 @@ class SpotifySnapshot(Base):
         "SpotifySnapshotArtist",
         back_populates="snapshot",
     )
+
+    tracks: Mapped[list["SpotifySnapshotTrack"]] = relationship(
+        "SpotifySnapshotTrack",
+        back_populates="snapshot",
+    )
+ 
