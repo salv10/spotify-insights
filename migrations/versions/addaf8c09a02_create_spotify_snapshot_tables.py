@@ -7,9 +7,8 @@ Create Date: 2026-09-13 14:03:37.426931
 """
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = 'addaf8c09a02'
