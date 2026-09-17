@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -65,3 +66,17 @@ def save_track_snapshot(
         db.add(snapshot_track)
 
 
+def get_snapshots(db: Session) -> list[SpotifySnapshot]:
+    return db.execute(
+        select(SpotifySnapshot)
+        .order_by(SpotifySnapshot.captured_at.desc())
+    ).scalars().all()
+
+def get_snapshot_by_id(
+    db: Session,
+    snapshot_id: int,
+) -> SpotifySnapshot | None:
+    return db.execute(
+        select(SpotifySnapshot)
+        .where(SpotifySnapshot.id == snapshot_id)
+    ).scalar_one_or_none()
