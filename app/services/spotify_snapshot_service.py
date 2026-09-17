@@ -80,3 +80,58 @@ def get_snapshot_by_id(
         select(SpotifySnapshot)
         .where(SpotifySnapshot.id == snapshot_id)
     ).scalar_one_or_none()
+
+def compare_artist_snapshots(
+    current_snapshot: SpotifySnapshot,
+    previous_snapshot: SpotifySnapshot,
+) -> list[dict]:
+
+    current_artists = {artist.spotify_artist_id: artist for artist in current_snapshot.artists}
+    previous_artists = {artist.spotify_artist_id: artist for artist in previous_snapshot.artists}
+    
+    comparison_results = []
+
+    for artist_id, current_artist in current_artists.items():
+        previous_artist = previous_artists.get(artist_id)
+        if previous_artist:
+            rank_change = previous_artist.rank - current_artist.rank
+
+            if rank_change > 0:
+                status = "up"
+            elif rank_change < 0:
+                status = "down"
+            else:
+                status = "same"
+
+            comparison_results.append({
+                "spotify_artist_id": artist_id,
+                "name": current_artist.name,
+                "current_rank": current_artist.rank,
+                "previous_rank": previous_artist.rank,
+                "rank_change": rank_change,
+                "status": status,
+            })
+        else:
+            comparison_results.append({
+                "spotify_artist_id": artist_id,
+                "name": current_artist.name,
+                "current_rank": current_artist.rank,
+                "previous_rank": None,
+                "rank_change": None,  # New entry
+                "status": "new",
+            })
+
+    for artist_id, previous_artist in previous_artists.items():
+        if artist_id not in current_artists:
+            comparison_results.append({
+                "spotify_artist_id": artist_id,
+                "name": previous_artist.name,
+                "current_rank": None,
+                "previous_rank": previous_artist.rank,
+                "rank_change": None,  # Removed entry
+                "status": "out",
+            })
+
+    return comparison_results
+
+    

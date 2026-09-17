@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.services.spotify_service import SpotifyService
-from app.services.spotify_snapshot_service import create_snapshot, get_snapshot_by_id, get_snapshots
+from app.services.spotify_snapshot_service import (
+    compare_artist_snapshots,
+    create_snapshot,
+    get_snapshot_by_id,
+    get_snapshots,
+)
 from app.services.spotify_token_service import get_valid_access_token
 
 router = APIRouter(
@@ -103,6 +108,25 @@ async def get_spotify_snapshots(
 
     return json_snapshots
 
+@router.get("/snapshots/compare")
+async def compare_spotify_snapshots(
+    current_id: int,
+    previous_id: int,
+    db: Annotated[Session, Depends(get_db)],
+):
+    current_snapshot = get_snapshot_by_id(db, current_id)
+    previous_snapshot = get_snapshot_by_id(db, previous_id)
+
+    if not current_snapshot or not previous_snapshot:
+        raise HTTPException(status_code=404, detail="One or both snapshots not found.")
+
+    comparison_artists_results = compare_artist_snapshots(current_snapshot, previous_snapshot)
+
+    return {
+        "current_snapshot_id": current_id,
+        "previous_snapshot_id": previous_id,
+        "artists": comparison_artists_results,
+    }
 
 @router.get("/snapshots/{snapshot_id}")
 async def get_spotify_snapshot_by_id(
@@ -139,3 +163,4 @@ async def get_spotify_snapshot_by_id(
         "artists": artists,
         "tracks": tracks,
     }
+
