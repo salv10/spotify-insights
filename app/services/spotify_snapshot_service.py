@@ -134,4 +134,58 @@ def compare_artist_snapshots(
 
     return comparison_results
 
+def compare_track_snapshots(
+    current_snapshot: SpotifySnapshot,
+    previous_snapshot: SpotifySnapshot,
+) -> list[dict]:
+
+    current_tracks = {track.spotify_track_id: track for track in current_snapshot.tracks}
+    previous_tracks = {track.spotify_track_id: track for track in previous_snapshot.tracks}
     
+    comparison_results = []
+
+    for track_id, current_track in current_tracks.items():
+        previous_track = previous_tracks.get(track_id)
+        if previous_track:
+            rank_change = previous_track.rank - current_track.rank
+
+            if rank_change > 0:
+                status = "up"
+            elif rank_change < 0:
+                status = "down"
+            else:
+                status = "same"
+
+            comparison_results.append({
+                "spotify_track_id": track_id,
+                "name": current_track.name,
+                "artist_name": current_track.artist_name,
+                "current_rank": current_track.rank,
+                "previous_rank": previous_track.rank,
+                "rank_change": rank_change,
+                "status": status,
+            })
+        else:
+            comparison_results.append({
+                "spotify_track_id": track_id,
+                "name": current_track.name,
+                "artist_name": current_track.artist_name,
+                "current_rank": current_track.rank,
+                "previous_rank": None,
+                "rank_change": None,  # New entry
+                "status": "new",
+            })
+
+    for track_id, previous_track in previous_tracks.items():
+        if track_id not in current_tracks:
+            comparison_results.append({
+                "spotify_track_id": track_id,
+                "name": previous_track.name,
+                "artist_name": previous_track.artist_name,
+                "current_rank": None,
+                "previous_rank": previous_track.rank,
+                "rank_change": None,  # Removed entry
+                "status": "out",
+            })
+
+    return comparison_results
