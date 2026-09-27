@@ -8,6 +8,7 @@ from app.db.session import get_db
 from app.services.spotify_service import SpotifyService
 from app.services.spotify_snapshot_service import (
     compare_artist_snapshots,
+    compare_track_snapshots,
     create_snapshot,
     get_snapshot_by_id,
     get_snapshots,
@@ -121,11 +122,13 @@ async def compare_spotify_snapshots(
         raise HTTPException(status_code=404, detail="One or both snapshots not found.")
 
     comparison_artists_results = compare_artist_snapshots(current_snapshot, previous_snapshot)
+    comparison_tracks_results = compare_track_snapshots(current_snapshot, previous_snapshot)
 
     return {
         "current_snapshot_id": current_id,
         "previous_snapshot_id": previous_id,
         "artists": comparison_artists_results,
+        "tracks": comparison_tracks_results,
     }
 
 @router.get("/snapshots/{snapshot_id}")
